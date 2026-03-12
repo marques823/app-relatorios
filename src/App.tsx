@@ -593,7 +593,11 @@ const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number,
   );
 };
 
-const VisitPreview = ({ selectedVisit, setScreen }: { selectedVisit: Visit, setScreen: (s: Screen) => void }) => {
+const VisitPreview = ({ selectedVisit, setScreen, handleDeleteVisit }: { 
+  selectedVisit: Visit, 
+  setScreen: (s: Screen) => void,
+  handleDeleteVisit: (id: number) => Promise<void>
+}) => {
   const reportRef = React.useRef<HTMLDivElement>(null);
   const [includeObservations, setIncludeObservations] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -687,26 +691,36 @@ const VisitPreview = ({ selectedVisit, setScreen }: { selectedVisit: Visit, setS
 
   return (
     <div className="p-4 md:p-8 bg-slate-100 min-h-screen">
-      <nav className="flex justify-between items-center mb-6 max-w-3xl mx-auto print:hidden">
+      <nav className="mb-6 max-w-3xl mx-auto print:hidden space-y-3">
+        {/* Row 1: Back */}
         <button onClick={() => setScreen('dashboard')} className="bg-white text-gray-700 px-4 py-2 rounded-lg border border-gray-300 font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors">
           <ArrowLeft className="h-5 w-5" />
           Voltar
         </button>
+        {/* Row 2: Actions — full-width flex, each button equal share */}
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={handleGeneratePDF}
             disabled={isGenerating}
-            className="bg-ios-blue text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+            className="flex-1 bg-ios-blue text-white py-2 px-2 rounded-lg font-medium shadow-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5 text-sm disabled:opacity-50"
           >
-            <Share2 className="h-5 w-5" />
-            {isGenerating ? 'Gerando...' : 'Compartilhar PDF'}
+            <Share2 className="h-4 w-4 shrink-0" />
+            <span className="hidden xs:inline truncate">{isGenerating ? 'Gerando...' : 'PDF'}</span>
+            <span className="xs:hidden">{isGenerating ? '...' : 'PDF'}</span>
           </button>
           <button
             onClick={() => setScreen('form')}
-            className="bg-gray-800 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-gray-900 transition-colors flex items-center gap-2"
+            className="flex-1 bg-gray-800 text-white py-2 px-2 rounded-lg font-medium shadow-sm hover:bg-gray-900 transition-colors flex items-center justify-center gap-1.5 text-sm"
           >
-            <Edit3 className="h-4 w-4" />
-            Editar
+            <Edit3 className="h-4 w-4 shrink-0" />
+            <span>Editar</span>
+          </button>
+          <button
+            onClick={() => handleDeleteVisit(selectedVisit.id)}
+            className="flex-1 bg-red-500 text-white py-2 px-2 rounded-lg font-medium shadow-sm hover:bg-red-600 transition-colors flex items-center justify-center gap-1.5 text-sm"
+          >
+            <Trash2 className="h-4 w-4 shrink-0" />
+            <span>Excluir</span>
           </button>
         </div>
       </nav>
@@ -910,7 +924,7 @@ export default function App() {
             />
           )}
           {screen === 'gallery' && selectedVisitId && <PhotoGallery selectedVisitId={selectedVisitId} setScreen={setScreen} />}
-          {screen === 'preview' && selectedVisit && <VisitPreview selectedVisit={selectedVisit} setScreen={setScreen} />}
+          {screen === 'preview' && selectedVisit && <VisitPreview selectedVisit={selectedVisit} setScreen={setScreen} handleDeleteVisit={handleDeleteVisit} />}
           {screen === 'calendar' && <div className="p-8 text-center">Vista de Calendário (Em breve)</div>}
           {screen === 'profile' && <div className="p-8 text-center">Vista de Perfil (Em breve)</div>}
         </motion.div>
