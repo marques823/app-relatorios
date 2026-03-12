@@ -446,12 +446,17 @@ const VisitForm = ({
             <section className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
               <h2 className="text-sm font-medium text-gray-700 mb-4 uppercase tracking-wider">Documentação Fotográfica</h2>
               <div className="grid grid-cols-3 gap-3">
+                {selectedVisit?.photos?.map(photo => (
+                  <div key={photo.id} className="aspect-square rounded-lg overflow-hidden border border-slate-100">
+                    <img src={photo.url} alt={photo.caption} className="w-full h-full object-cover" />
+                  </div>
+                ))}
                 <div
                   onClick={() => setScreen('gallery')}
                   className="aspect-square bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
                 >
                   <Camera className="text-ios-blue h-8 w-8" />
-                  <span className="text-[10px] font-bold text-gray-500 uppercase mt-1">Add Foto</span>
+                  <span className="text-[10px] font-bold text-gray-500 uppercase mt-1">Add/Edit</span>
                 </div>
               </div>
             </section>
@@ -904,6 +909,28 @@ const VisitPreview = ({ selectedVisit, setScreen, handleDeleteVisit, handleUpdat
             <div>
               <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-100 pb-2 mb-4">Observações Finais</h3>
               <p className="text-gray-600">{selectedVisit.observations || 'Nenhuma observação final.'}</p>
+            </div>
+          )}
+
+          {selectedVisit.photos && selectedVisit.photos.length > 0 && (
+            <div>
+              <div className="flex justify-between items-center border-b border-gray-100 pb-2 mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Fotos e Evidências</h3>
+                <button 
+                  onClick={() => setScreen('gallery')}
+                  className="text-ios-blue text-sm font-medium flex items-center gap-1 print:hidden"
+                >
+                  <ImageIcon className="h-4 w-4" />
+                  Gerenciar
+                </button>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {selectedVisit.photos.map(photo => (
+                  <div key={photo.id} className="rounded-xl overflow-hidden border border-slate-100 shadow-sm">
+                    <img src={photo.url} alt={photo.caption} className="w-full h-40 object-cover" />
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </section>
