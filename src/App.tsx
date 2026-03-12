@@ -591,10 +591,11 @@ const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number,
   );
 };
 
-const VisitPreview = ({ selectedVisit, setScreen, handleDeleteVisit }: {
+const VisitPreview = ({ selectedVisit, setScreen, handleDeleteVisit, handleUpdateVisit }: {
   selectedVisit: Visit,
   setScreen: (s: Screen) => void,
-  handleDeleteVisit: (id: number) => Promise<void>
+  handleDeleteVisit: (id: number) => Promise<void>,
+  handleUpdateVisit: (id: number, data: Partial<Visit>) => Promise<void>
 }) => {
   const reportRef = React.useRef<HTMLDivElement>(null);
   const [includeObservations, setIncludeObservations] = useState(true);
@@ -736,6 +737,31 @@ const VisitPreview = ({ selectedVisit, setScreen, handleDeleteVisit }: {
             <span className="absolute left-1 h-4 w-4 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
           </div>
         </label>
+      </div>
+
+      {/* Status Selector */}
+      <div className="max-w-3xl mx-auto mb-6 bg-white p-4 rounded-xl border border-slate-200 shadow-sm print:hidden">
+        <p className="text-sm font-semibold text-slate-700 mb-3">Status do Relatório</p>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            { value: 'pending',      label: 'Pendente',      color: 'bg-orange-50 border-ios-orange text-ios-orange' },
+            { value: 'in_progress',  label: 'Em Andamento',  color: 'bg-blue-50 border-ios-blue text-ios-blue' },
+            { value: 'completed',    label: 'Concluído',     color: 'bg-green-50 border-ios-green text-ios-green' },
+            { value: 'closed_house', label: 'Casa Fechada',  color: 'bg-slate-100 border-slate-400 text-slate-600' },
+          ] as const).map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => handleUpdateVisit(selectedVisit.id, { status: opt.value })}
+              className={`py-2 px-3 rounded-xl border-2 text-sm font-semibold transition-all ${
+                selectedVisit.status === opt.value
+                  ? opt.color + ' shadow-sm scale-[1.02]'
+                  : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <main ref={reportRef} className="max-w-3xl mx-auto bg-white p-6 md:p-10 shadow-lg rounded-sm border border-slate-200">
@@ -922,7 +948,7 @@ export default function App() {
             />
           )}
           {screen === 'gallery' && selectedVisitId && <PhotoGallery selectedVisitId={selectedVisitId} setScreen={setScreen} />}
-          {screen === 'preview' && selectedVisit && <VisitPreview selectedVisit={selectedVisit} setScreen={setScreen} handleDeleteVisit={handleDeleteVisit} />}
+          {screen === 'preview' && selectedVisit && <VisitPreview selectedVisit={selectedVisit} setScreen={setScreen} handleDeleteVisit={handleDeleteVisit} handleUpdateVisit={handleUpdateVisit} />}
           {screen === 'calendar' && <div className="p-8 text-center">Vista de Calendário (Em breve)</div>}
           {screen === 'profile' && <div className="p-8 text-center">Vista de Perfil (Em breve)</div>}
         </motion.div>
