@@ -593,7 +593,11 @@ const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number,
   );
 };
 
-const VisitPreview = ({ selectedVisit, setScreen }: { selectedVisit: Visit, setScreen: (s: Screen) => void }) => {
+const VisitPreview = ({ selectedVisit, setScreen, handleDeleteVisit }: { 
+  selectedVisit: Visit, 
+  setScreen: (s: Screen) => void,
+  handleDeleteVisit: (id: number) => Promise<void>
+}) => {
   const reportRef = React.useRef<HTMLDivElement>(null);
   const [includeObservations, setIncludeObservations] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -707,6 +711,13 @@ const VisitPreview = ({ selectedVisit, setScreen }: { selectedVisit: Visit, setS
           >
             <Edit3 className="h-4 w-4" />
             Editar
+          </button>
+          <button
+            onClick={() => handleDeleteVisit(selectedVisit.id)}
+            className="bg-red-500 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-red-600 transition-colors flex items-center gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            Excluir
           </button>
         </div>
       </nav>
@@ -910,7 +921,7 @@ export default function App() {
             />
           )}
           {screen === 'gallery' && selectedVisitId && <PhotoGallery selectedVisitId={selectedVisitId} setScreen={setScreen} />}
-          {screen === 'preview' && selectedVisit && <VisitPreview selectedVisit={selectedVisit} setScreen={setScreen} />}
+          {screen === 'preview' && selectedVisit && <VisitPreview selectedVisit={selectedVisit} setScreen={setScreen} handleDeleteVisit={handleDeleteVisit} />}
           {screen === 'calendar' && <div className="p-8 text-center">Vista de Calendário (Em breve)</div>}
           {screen === 'profile' && <div className="p-8 text-center">Vista de Perfil (Em breve)</div>}
         </motion.div>
