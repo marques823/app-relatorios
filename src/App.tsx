@@ -475,6 +475,8 @@ const VisitForm = ({
 const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number, setScreen: (s: Screen) => void }) => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const fetchPhotos = async () => {
     const { data, error } = await supabase
@@ -514,7 +516,49 @@ const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number,
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${selectedVisitId}/${Date.now()}.${fileExt}`;
+      const filePath = `photos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('photos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('photos')
+        .getPublicUrl(filePath);
+
+      const { error: insertError } = await supabase
+        .from('photos')
+        .insert([{
+          visit_id: selectedVisitId,
+          url: publicUrl,
+          caption: 'Foto da Visita',
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        }]);
+
+      if (insertError) throw insertError;
+
+      fetchPhotos();
+    } catch (err: any) {
+      console.error('Failed to upload photo', err);
+      alert('Erro no upload: ' + (err.message || 'Erro desconhecido'));
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const handleDeletePhoto = async (id: number) => {
+    if (!confirm('Deseja excluir esta foto?')) return;
     try {
       const { error } = await supabase
         .from('photos')
@@ -540,6 +584,40 @@ const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number,
       </header>
 
       <main className="p-4">
+        {/* Real File Upload Section */}
+        <div className="mb-6">
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className={`w-full h-32 border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-[0.98] ${
+              isUploading ? 'bg-slate-50 opacity-100' : 'bg-white hover:bg-slate-50'
+            }`}
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="h-8 w-8 text-ios-blue animate-spin" />
+                <span className="text-sm font-semibold text-slate-500">Enviando foto...</span>
+              </>
+            ) : (
+              <>
+                <Camera className="h-8 w-8 text-ios-blue" />
+                <div className="text-center">
+                  <p className="text-sm font-bold text-slate-700">Tirar Foto ou Galeria</p>
+                  <p className="text-xs text-slate-400">Clique para selecionar</p>
+                </div>
+              </>
+            )}
+          </button>
+        </div>
+
         <div className="grid grid-cols-2 gap-4">
           {photos.map(photo => (
             <article key={photo.id} className="relative bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 group">
@@ -550,7 +628,9 @@ const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number,
                 referrerPolicy="no-referrer"
               />
               <div className="p-2">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{new Date(photo.created_at).toLocaleDateString()}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                  {new Date(photo.created_at).toLocaleDateString()}
+                </p>
                 <p className="text-sm font-semibold text-gray-800 truncate">{photo.caption}</p>
               </div>
               <button
@@ -563,28 +643,38 @@ const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number,
           ))}
         </div>
 
-        <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-          <h3 className="text-sm font-bold text-slate-700">Adicionar Foto via URL</h3>
-          <input
-            type="text"
-            value={newPhotoUrl}
-            onChange={e => setNewPhotoUrl(e.target.value)}
-            placeholder="https://exemplo.com/imagem.jpg"
-            className="w-full p-2 border border-slate-300 rounded-lg text-sm"
-          />
-          <button
-            onClick={handleAddPhoto}
-            className="w-full bg-ios-blue text-white py-2 rounded-lg text-sm font-bold"
-          >
-            Adicionar Foto
-          </button>
-        </div>
+        <details className="mt-8">
+          <summary className="text-xs font-bold text-slate-400 cursor-pointer uppercase tracking-widest list-none text-center">
+            Adicionar via URL (Avançado)
+          </summary>
+          <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+            <h3 className="text-sm font-bold text-slate-700">Adicionar Foto via URL</h3>
+            <input
+              type="text"
+              value={newPhotoUrl}
+              onChange={e => setNewPhotoUrl(e.target.value)}
+              placeholder="https://exemplo.com/imagem.jpg"
+              className="w-full p-2 border border-slate-300 rounded-lg text-sm bg-white"
+            />
+            <button
+              onClick={handleAddPhoto}
+              disabled={isUploading}
+              className="w-full bg-slate-200 text-slate-700 py-2 rounded-lg text-sm font-bold"
+            >
+              Adicionar via Link
+            </button>
+          </div>
+        </details>
       </main>
 
       <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-gray-200 p-4 pb-8 flex justify-center items-center">
-        <button className="flex items-center justify-center space-x-2 bg-ios-blue hover:bg-blue-700 active:scale-95 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all w-full max-w-xs">
-          <Plus className="h-6 w-6" strokeWidth={2.5} />
-          <span>Adicionar Fotos</span>
+        <button 
+          onClick={() => fileInputRef.current?.click()}
+          disabled={isUploading}
+          className="flex items-center justify-center space-x-2 bg-ios-blue hover:bg-blue-700 active:scale-95 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all w-full max-w-xs"
+        >
+          {isUploading ? <Loader2 className="animate-spin" /> : <Camera className="h-5 w-5" />}
+          <span>{isUploading ? 'Enviando...' : 'Adicionar Foto'}</span>
         </button>
       </div>
     </div>
