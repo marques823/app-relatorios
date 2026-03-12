@@ -1,0 +1,4 @@
+include ':app'
+
+// Capacitor plugins e core (automático)
+apply from: 'capacitor.settings.gradle'

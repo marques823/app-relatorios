@@ -1,0 +1,5 @@
+{
+  "name": "FieldSync Pro",
+  "description": "Sistema de gestão de visitas técnicas com relatórios, fotos e sincronização de dados.",
+  "requestFramePermissions": ["camera"]
+}

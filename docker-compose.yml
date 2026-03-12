@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    ports:
+      - "9950:9950"
+    environment:
+      - PORT=9950
+    volumes:
+      - ./.env:/app/.env
+      - ./database.db:/app/database.db
+    restart: always

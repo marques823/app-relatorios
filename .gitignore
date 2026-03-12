@@ -1,0 +1,8 @@
+.env*
+!.env.example
+database.db
+node_modules/
+dist/
+build/
+.idea/
+*.log

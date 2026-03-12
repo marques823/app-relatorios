@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">App Relatorio</string>
+    <string name="title_activity_main">App Relatorio</string>
+    <string name="package_name">com.example.apprelatorio</string>
+    <string name="custom_url_scheme">com.example.apprelatorio</string>
+</resources>
