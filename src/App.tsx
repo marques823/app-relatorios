@@ -523,8 +523,7 @@ const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number,
     setIsUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${selectedVisitId}/${Date.now()}.${fileExt}`;
-      const filePath = `photos/${fileName}`;
+      const filePath = `${selectedVisitId}/${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('photos')
