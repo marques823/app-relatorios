@@ -99,7 +99,7 @@ const Dashboard = ({ visits, setScreen, setSelectedVisitId, signOut }: {
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 safe-top">
         <div className="px-4 py-3 flex justify-between items-center">
           <h1 className="text-xl font-bold tracking-tight font-display">Visitas Técnicas</h1>
-          <button 
+          <button
             onClick={() => signOut()}
             className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 text-slate-500 active:bg-slate-200 transition-colors"
           >
@@ -145,7 +145,7 @@ const Dashboard = ({ visits, setScreen, setSelectedVisitId, signOut }: {
                 className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4 active:bg-slate-50 transition-colors cursor-pointer"
               >
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${visit.status === 'completed' ? 'bg-green-50 text-ios-green' :
-                    visit.status === 'in_progress' ? 'bg-blue-50 text-ios-blue' : 'bg-orange-50 text-ios-orange'
+                  visit.status === 'in_progress' ? 'bg-blue-50 text-ios-blue' : 'bg-orange-50 text-ios-orange'
                   }`}>
                   {visit.status === 'completed' ? <CheckCircle2 className="h-6 w-6" /> :
                     visit.status === 'in_progress' ? <Clock className="h-6 w-6" /> : <AlertCircle className="h-6 w-6" />}
@@ -181,13 +181,13 @@ const ReportsList = ({ visits, setScreen, setSelectedVisitId }: {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   const filteredVisits = visits.filter(visit => {
-    const matchesSearch = 
+    const matchesSearch =
       visit.report_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       visit.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       visit.short_description?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesStatus = !statusFilter || visit.status === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -225,25 +225,23 @@ const ReportsList = ({ visits, setScreen, setSelectedVisitId }: {
         </div>
 
         <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-          <button 
+          <button
             onClick={() => setStatusFilter(null)}
-            className={`flex h-9 shrink-0 items-center justify-center rounded-full px-4 text-sm font-medium transition-all ${
-              statusFilter === null 
-                ? 'bg-ios-blue text-white shadow-md' 
+            className={`flex h-9 shrink-0 items-center justify-center rounded-full px-4 text-sm font-medium transition-all ${statusFilter === null
+                ? 'bg-ios-blue text-white shadow-md'
                 : 'bg-white border border-slate-200 text-slate-700'
-            }`}
+              }`}
           >
             Todos
           </button>
           {Object.entries(statusLabels).map(([value, label]) => (
-            <button 
-              key={value} 
+            <button
+              key={value}
               onClick={() => setStatusFilter(statusFilter === value ? null : value)}
-              className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-4 text-sm font-medium transition-all ${
-                statusFilter === value 
-                  ? 'bg-ios-blue text-white shadow-md' 
+              className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-4 text-sm font-medium transition-all ${statusFilter === value
+                  ? 'bg-ios-blue text-white shadow-md'
                   : 'bg-white border border-slate-200 text-slate-700'
-              }`}
+                }`}
             >
               <span>{label}</span>
               {statusFilter === value ? <CheckCircle2 className="h-4 w-4" /> : <ChevronRight className="h-4 w-4 rotate-90 opacity-40" />}
@@ -257,8 +255,8 @@ const ReportsList = ({ visits, setScreen, setSelectedVisitId }: {
               key={visit.id}
               onClick={() => { setSelectedVisitId(visit.id); setScreen('preview'); }}
               className={`bg-white p-4 rounded-xl shadow-sm border-l-4 transition-transform active:scale-[0.98] cursor-pointer ${visit.status === 'completed' ? 'border-ios-green' :
-                  visit.status === 'in_progress' ? 'border-ios-blue' :
-                    visit.status === 'pending' ? 'border-ios-orange' : 'border-slate-400'
+                visit.status === 'in_progress' ? 'border-ios-blue' :
+                  visit.status === 'pending' ? 'border-ios-orange' : 'border-slate-400'
                 }`}
             >
               <div className="flex justify-between items-start mb-2">
@@ -290,12 +288,12 @@ const ReportsList = ({ visits, setScreen, setSelectedVisitId }: {
               </div>
               <h3 className="text-slate-900 font-bold">Nenhum resultado</h3>
               <p className="text-slate-500 text-sm mt-1">
-                {searchTerm || statusFilter 
-                  ? 'Tente ajustar os filtros para encontrar o que procura.' 
+                {searchTerm || statusFilter
+                  ? 'Tente ajustar os filtros para encontrar o que procura.'
                   : 'Nenhuma visita registrada ainda.'}
               </p>
               {(searchTerm || statusFilter) && (
-                <button 
+                <button
                   onClick={() => { setSearchTerm(''); setStatusFilter(null); }}
                   className="mt-4 text-ios-blue font-bold text-sm uppercase tracking-wider"
                 >
@@ -500,11 +498,11 @@ const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number,
     try {
       const { error } = await supabase
         .from('photos')
-        .insert([{ 
-          visit_id: selectedVisitId, 
-          url: newPhotoUrl, 
+        .insert([{
+          visit_id: selectedVisitId,
+          url: newPhotoUrl,
           caption: 'Nova Foto',
-          user_id: (await supabase.auth.getUser()).data.user?.id 
+          user_id: (await supabase.auth.getUser()).data.user?.id
         }]);
 
       if (!error) {
@@ -593,10 +591,11 @@ const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number,
   );
 };
 
-const VisitPreview = ({ selectedVisit, setScreen, handleDeleteVisit }: { 
-  selectedVisit: Visit, 
+const VisitPreview = ({ selectedVisit, setScreen, handleDeleteVisit, handleUpdateVisit }: {
+  selectedVisit: Visit,
   setScreen: (s: Screen) => void,
-  handleDeleteVisit: (id: number) => Promise<void>
+  handleDeleteVisit: (id: number) => Promise<void>,
+  handleUpdateVisit: (id: number, data: Partial<Visit>) => Promise<void>
 }) => {
   const reportRef = React.useRef<HTMLDivElement>(null);
   const [includeObservations, setIncludeObservations] = useState(true);
@@ -740,6 +739,31 @@ const VisitPreview = ({ selectedVisit, setScreen, handleDeleteVisit }: {
         </label>
       </div>
 
+      {/* Status Selector */}
+      <div className="max-w-3xl mx-auto mb-6 bg-white p-4 rounded-xl border border-slate-200 shadow-sm print:hidden">
+        <p className="text-sm font-semibold text-slate-700 mb-3">Status do Relatório</p>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            { value: 'pending',      label: 'Pendente',      color: 'bg-orange-50 border-ios-orange text-ios-orange' },
+            { value: 'in_progress',  label: 'Em Andamento',  color: 'bg-blue-50 border-ios-blue text-ios-blue' },
+            { value: 'completed',    label: 'Concluído',     color: 'bg-green-50 border-ios-green text-ios-green' },
+            { value: 'closed_house', label: 'Casa Fechada',  color: 'bg-slate-100 border-slate-400 text-slate-600' },
+          ] as const).map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => handleUpdateVisit(selectedVisit.id, { status: opt.value })}
+              className={`py-2 px-3 rounded-xl border-2 text-sm font-semibold transition-all ${
+                selectedVisit.status === opt.value
+                  ? opt.color + ' shadow-sm scale-[1.02]'
+                  : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300'
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <main ref={reportRef} className="max-w-3xl mx-auto bg-white p-6 md:p-10 shadow-lg rounded-sm border border-slate-200">
         <header className="border-b-2 border-gray-100 pb-6 mb-8 flex justify-between items-start">
           <div>
@@ -793,10 +817,10 @@ const VisitPreview = ({ selectedVisit, setScreen, handleDeleteVisit }: {
             <div className="h-16 w-48 border-b-2 border-gray-300 flex items-end pb-2 italic text-gray-400">
               Assinado Eletronicamente
             </div>
-            <p className="text-sm text-gray-600 mt-2">JD - FieldSync Pro</p>
+            <p className="text-sm text-gray-600 mt-2">TL - Técnico Litoral Pro</p>
           </div>
           <div className="text-right md:flex md:flex-col md:justify-end">
-            <p className="text-xs text-gray-400">Relatório gerado via FieldSync Pro</p>
+            <p className="text-xs text-gray-400">Relatório gerado Técnico Litoral Pro</p>
             <p className="text-xs text-gray-400">Hora: {new Date().toLocaleTimeString()}</p>
           </div>
         </footer>
@@ -924,7 +948,7 @@ export default function App() {
             />
           )}
           {screen === 'gallery' && selectedVisitId && <PhotoGallery selectedVisitId={selectedVisitId} setScreen={setScreen} />}
-          {screen === 'preview' && selectedVisit && <VisitPreview selectedVisit={selectedVisit} setScreen={setScreen} handleDeleteVisit={handleDeleteVisit} />}
+          {screen === 'preview' && selectedVisit && <VisitPreview selectedVisit={selectedVisit} setScreen={setScreen} handleDeleteVisit={handleDeleteVisit} handleUpdateVisit={handleUpdateVisit} />}
           {screen === 'calendar' && <div className="p-8 text-center">Vista de Calendário (Em breve)</div>}
           {screen === 'profile' && <div className="p-8 text-center">Vista de Perfil (Em breve)</div>}
         </motion.div>
