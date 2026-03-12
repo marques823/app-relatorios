@@ -18,10 +18,15 @@ import {
   Trash2,
   Search,
   Filter,
-  Bell
+  Bell,
+  Loader2,
+  LogOut,
+  LogIn
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from './lib/supabaseClient';
+import { useAuth } from './lib/authContext';
+import { Login } from './components/Login';
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -77,10 +82,11 @@ const StatusBadge = ({ status }: { status: Status }) => {
   );
 };
 
-const Dashboard = ({ visits, setScreen, setSelectedVisitId }: {
+const Dashboard = ({ visits, setScreen, setSelectedVisitId, signOut }: {
   visits: Visit[],
   setScreen: (s: Screen) => void,
-  setSelectedVisitId: (id: number | null) => void
+  setSelectedVisitId: (id: number | null) => void,
+  signOut: () => Promise<void>
 }) => {
   const stats = {
     pending: visits.filter(v => v.status === 'pending').length,
@@ -93,8 +99,11 @@ const Dashboard = ({ visits, setScreen, setSelectedVisitId }: {
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 safe-top">
         <div className="px-4 py-3 flex justify-between items-center">
           <h1 className="text-xl font-bold tracking-tight font-display">Visitas Técnicas</h1>
-          <button className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
-            <span className="text-xs font-semibold text-slate-500">JD</span>
+          <button 
+            onClick={() => signOut()}
+            className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 text-slate-500 active:bg-slate-200 transition-colors"
+          >
+            <LogIn className="h-5 w-5 rotate-180" />
           </button>
         </div>
       </header>
@@ -428,7 +437,12 @@ const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number,
     try {
       const { error } = await supabase
         .from('photos')
-        .insert([{ visit_id: selectedVisitId, url: newPhotoUrl, caption: 'Nova Foto' }]);
+        .insert([{ 
+          visit_id: selectedVisitId, 
+          url: newPhotoUrl, 
+          caption: 'Nova Foto',
+          user_id: (await supabase.auth.getUser()).data.user?.id 
+        }]);
 
       if (!error) {
         setNewPhotoUrl('');
@@ -715,16 +729,19 @@ const VisitPreview = ({ selectedVisit, setScreen }: { selectedVisit: Visit, setS
 };
 
 export default function App() {
+  const { user, loading: authLoading, signOut } = useAuth();
   const [screen, setScreen] = useState<Screen>('dashboard');
   const [visits, setVisits] = useState<Visit[]>([]);
   const [selectedVisitId, setSelectedVisitId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchVisits = async () => {
+    if (!user) return;
     try {
       const { data, error } = await supabase
         .from('visits')
         .select('*, photos(*)')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -737,8 +754,10 @@ export default function App() {
   };
 
   useEffect(() => {
-    fetchVisits();
-  }, []);
+    if (user) {
+      fetchVisits();
+    }
+  }, [user]);
 
   const selectedVisit = visits.find(v => v.id === selectedVisitId);
 
@@ -747,13 +766,14 @@ export default function App() {
       const report_number = `TV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
       const { error } = await supabase
         .from('visits')
-        .insert([{ ...data, report_number }]);
+        .insert([{ ...data, report_number, user_id: user.id }]);
 
       if (error) throw error;
       await fetchVisits();
       setScreen('dashboard');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create visit', err);
+      alert('Erro ao salvar visita: ' + (err.message || JSON.stringify(err)));
     }
   };
 
@@ -769,8 +789,9 @@ export default function App() {
       if (error) throw error;
       await fetchVisits();
       setScreen('dashboard');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to update visit', err);
+      alert('Erro ao atualizar visita: ' + (err.message || JSON.stringify(err)));
     }
   };
 
@@ -792,6 +813,18 @@ export default function App() {
 
   // --- Main Layout ---
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-ios-blue">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
+
   return (
     <div className="max-w-md mx-auto min-h-screen bg-ios-gray relative overflow-x-hidden">
       <AnimatePresence mode="wait">
@@ -802,7 +835,7 @@ export default function App() {
           exit={{ opacity: 0, x: -20 }}
           transition={{ duration: 0.2 }}
         >
-          {screen === 'dashboard' && <Dashboard visits={visits} setScreen={setScreen} setSelectedVisitId={setSelectedVisitId} />}
+          {screen === 'dashboard' && <Dashboard visits={visits} setScreen={setScreen} setSelectedVisitId={setSelectedVisitId} signOut={signOut} />}
           {screen === 'reports' && <ReportsList visits={visits} setScreen={setScreen} setSelectedVisitId={setSelectedVisitId} />}
           {screen === 'form' && (
             <VisitForm
