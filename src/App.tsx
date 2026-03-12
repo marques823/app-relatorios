@@ -177,6 +177,27 @@ const ReportsList = ({ visits, setScreen, setSelectedVisitId }: {
   setScreen: (s: Screen) => void,
   setSelectedVisitId: (id: number | null) => void
 }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+
+  const filteredVisits = visits.filter(visit => {
+    const matchesSearch = 
+      visit.report_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      visit.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      visit.short_description?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = !statusFilter || visit.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  const statusLabels: Record<string, string> = {
+    'pending': 'Pendente',
+    'in_progress': 'Em Andamento',
+    'completed': 'Concluído',
+    'closed_house': 'Casa Fechada'
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200 safe-top">
@@ -197,21 +218,41 @@ const ReportsList = ({ visits, setScreen, setSelectedVisitId }: {
           <input
             type="text"
             placeholder="Pesquisar por número ou endereço"
-            className="w-full pl-10 pr-4 py-3 bg-white border-none rounded-xl focus:ring-2 focus:ring-ios-blue shadow-sm text-sm"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 bg-white border-none rounded-xl focus:ring-2 focus:ring-ios-blue shadow-sm text-sm outline-none"
           />
         </div>
 
         <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-          {['Pendente', 'Em Andamento', 'Concluído', 'Casa Fechada'].map(label => (
-            <button key={label} className="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-white border border-slate-200 px-4 text-sm font-medium text-slate-700">
+          <button 
+            onClick={() => setStatusFilter(null)}
+            className={`flex h-9 shrink-0 items-center justify-center rounded-full px-4 text-sm font-medium transition-all ${
+              statusFilter === null 
+                ? 'bg-ios-blue text-white shadow-md' 
+                : 'bg-white border border-slate-200 text-slate-700'
+            }`}
+          >
+            Todos
+          </button>
+          {Object.entries(statusLabels).map(([value, label]) => (
+            <button 
+              key={value} 
+              onClick={() => setStatusFilter(statusFilter === value ? null : value)}
+              className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-4 text-sm font-medium transition-all ${
+                statusFilter === value 
+                  ? 'bg-ios-blue text-white shadow-md' 
+                  : 'bg-white border border-slate-200 text-slate-700'
+              }`}
+            >
               <span>{label}</span>
-              <ChevronRight className="h-4 w-4 rotate-90" />
+              {statusFilter === value ? <CheckCircle2 className="h-4 w-4" /> : <ChevronRight className="h-4 w-4 rotate-90 opacity-40" />}
             </button>
           ))}
         </div>
 
         <div className="space-y-3">
-          {visits.map(visit => (
+          {filteredVisits.map(visit => (
             <div
               key={visit.id}
               onClick={() => { setSelectedVisitId(visit.id); setScreen('preview'); }}
@@ -241,6 +282,28 @@ const ReportsList = ({ visits, setScreen, setSelectedVisitId }: {
               </div>
             </div>
           ))}
+
+          {filteredVisits.length === 0 && (
+            <div className="text-center py-12">
+              <div className="bg-slate-100 size-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Search className="text-slate-400 size-8" />
+              </div>
+              <h3 className="text-slate-900 font-bold">Nenhum resultado</h3>
+              <p className="text-slate-500 text-sm mt-1">
+                {searchTerm || statusFilter 
+                  ? 'Tente ajustar os filtros para encontrar o que procura.' 
+                  : 'Nenhuma visita registrada ainda.'}
+              </p>
+              {(searchTerm || statusFilter) && (
+                <button 
+                  onClick={() => { setSearchTerm(''); setStatusFilter(null); }}
+                  className="mt-4 text-ios-blue font-bold text-sm uppercase tracking-wider"
+                >
+                  Limpar tudo
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </main>
     </div>
