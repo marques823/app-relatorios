@@ -472,7 +472,11 @@ const VisitForm = ({
   );
 };
 
-const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number, setScreen: (s: Screen) => void }) => {
+const PhotoGallery = ({ selectedVisitId, setScreen, user }: { 
+  selectedVisitId: number, 
+  setScreen: (s: Screen) => void,
+  user: any
+}) => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -541,15 +545,19 @@ const PhotoGallery = ({ selectedVisitId, setScreen }: { selectedVisitId: number,
           visit_id: selectedVisitId,
           url: publicUrl,
           caption: 'Foto da Visita',
-          user_id: (await supabase.auth.getUser()).data.user?.id
+          user_id: user.id
         }]);
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Database Insert Error:', insertError);
+        throw insertError;
+      }
 
       fetchPhotos();
     } catch (err: any) {
-      console.error('Failed to upload photo', err);
-      alert('Erro no upload: ' + (err.message || 'Erro desconhecido'));
+      console.error('Detailed Upload Error:', err);
+      const msg = err.message || JSON.stringify(err);
+      alert('Erro no upload: ' + msg);
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -1036,7 +1044,7 @@ export default function App() {
               handleCreateVisit={handleCreateVisit}
             />
           )}
-          {screen === 'gallery' && selectedVisitId && <PhotoGallery selectedVisitId={selectedVisitId} setScreen={setScreen} />}
+          {screen === 'gallery' && selectedVisitId && user && <PhotoGallery selectedVisitId={selectedVisitId} setScreen={setScreen} user={user} />}
           {screen === 'preview' && selectedVisit && <VisitPreview selectedVisit={selectedVisit} setScreen={setScreen} handleDeleteVisit={handleDeleteVisit} handleUpdateVisit={handleUpdateVisit} />}
           {screen === 'calendar' && <div className="p-8 text-center">Vista de Calendário (Em breve)</div>}
           {screen === 'profile' && <div className="p-8 text-center">Vista de Perfil (Em breve)</div>}
